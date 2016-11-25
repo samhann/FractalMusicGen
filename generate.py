@@ -214,7 +214,6 @@ def generateNoteDelta(counter,base,multiplier):
 def generateDurationSequence(cycle_length,beat_length,tension,tension_direction):
     base_duration = 2
     ascending_rhythm_powers =  [randint(4,5),randint(4,4),randint(3,5),randint(3,4),randint(3,4),randint(2,3),randint(2,3),randint(1,2),randint(1,2)]
-    descending_rhythm_powers = [randint(1,3),randint(1,3),randint(1,4),randint(2,5),randint(3,5),randint(4,5),2+randint(2,3),2 + randint(2,3),3 + randint(4,5)]
     max_power = ascending_rhythm_powers[tension] 
     uniform_beats = [2*randint(1,max_power) for x in range(0,cycle_length)]
     target = 8
@@ -246,4 +245,4 @@ pentatonic = ['C','D','E','G','A']
 bluesScaleNotes = ['C','D#','F','F#','A#']
 arabScaleNotes = ['C','C#','E','F','G','G#']
 spanish = ['C', 'C#',  'E'  ,'F'  ,'G' , 'G#' ,'A#']
-composeAndWriteToFile(bluesScaleNotes,[],500,"output.mid")
+composeAndWriteToFile(pentatonic,[],500,"output.mid")
