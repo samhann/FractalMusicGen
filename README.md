@@ -15,3 +15,9 @@ https://clyp.it/gib1e0r3
 "Pentatonic"
 
 https://clyp.it/dztvxjfb
+
+## Installation
+
+Just run pip install midiutil and then run the script. 
+
+Play output.mid on a nice instrument on your synth or DAW.

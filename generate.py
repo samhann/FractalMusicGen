@@ -63,9 +63,12 @@ class Composer(object):
 
         counter = 0
 
+        # parameters to the random note offset generator
         multiplier =  randint(2,55000)
         noteCounter = randint(20,55000)
         base =  randint(1,51000)
+        
+
         cycle_length = 2**randint(0,3)
         octaveOffset = 0
         octaveMod = 0
@@ -81,10 +84,11 @@ class Composer(object):
         total_meta_cycles = 0
         meta_cycle_max = 10
         cycle_counter = 0
-
         duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
 
         while counter < duration:
+
+            # suppress the note offset lower proportional to tension
             noteMod = 3
             if tension >= 2:
                 noteMod = 3
@@ -104,15 +108,11 @@ class Composer(object):
             noteOffset = generateNoteDelta(noteCounter+counter,multiplier,base) / (noteMod)
             # extend durations by even multiples every now and then
             noteDuration = duration_sequence[(noteCounter + counter) % len(duration_sequence)]
-            # doesnt make sense to do this on every note but removing this makes the output worse. need to investigate
-            #cycle_length = 2**randint(2,3)
             num_cycles = 0
             
             
             #switch things up every now and then ie cycles
             if counter % cycle_length == 0 and counter != 0:
-
-
                 # this makes a repetition
                 if randint(0,10) % 4 == 0:
                     noteCounter = noteCounter - cycle_length - 1
@@ -121,17 +121,21 @@ class Composer(object):
 
                 octaveOffset = 0 
 
-                # this actually makes the output more varied 
+                # this actually makes the output more varied . Need to see why its required
                 if randint(1,10) % 2 == 0 :
                     octaveMod =  (octaveMod + 1) % 3
 
+                # dont get too varied when tension has fallen
                 if tension_direction == -1 and tension <= 5:
                     octaveMod = max(0,octaveMod-2)
 
                 tension_count = tension_count + 1
                 tension_ended = False
 
+                # When cycle of rising and falling tension is complete
                 if tension_count % tension_cycle == 0:
+
+                    #Reset note generator when lowering tension from peak
                     if tension_direction == -1 :
                         # reset the random variables only after a "phrase"
                         tension_ended = True
@@ -141,11 +145,15 @@ class Composer(object):
 
                         melody.append(("S",finalOctaveOffset,8, 25 + 20*int(tension/9) + randint(4,8)))
 
+                    # Restart tension cycle
                     tension_count = 0
                     tension_direction = tension_direction * -1
+                    # This adds long range structure . Starts and ends slow. Can increase randomn upper range if
+                    # output is too dull.
                     tension_cycle = meta_tension + randint(1,3)
                     meta_tension = meta_tension + randint(1,2)
 
+                    # same thing as tension but meta
                     if meta_tension_cycle % meta_tension == 0:
                         meta_tension = 0
                         meta_tension_direction = meta_tension_direction * -1
@@ -158,6 +166,7 @@ class Composer(object):
 
                 meta_term = meta_tension if meta_tension_direction == 1 else -1*meta_tension
 
+                # this is a hack to force tension back down. Need to see if it can be avoided
                 fraction = tension_count / tension_cycle
 
                 tension = (meta_term + (tension + tension_direction*randint(1,2) )) % randint(6,8)
@@ -167,8 +176,11 @@ class Composer(object):
                 elif (tension_count + 1) % tension_cycle == 0:
                     tension = randint(1,2)
 
+                # generate note lengths based on cycle length , beat length and tension . beat length not used
+                # need to fix to accomodate both odd and even rhythms
                 duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
                 
+                # Every now and then make the phrases longer or shorter based on the tension
                 if num_cycles % randint(2,4) == 0:
                    cycle_length = 2 + 2**randint(0,1) 
                    if tension >= 4:
@@ -192,6 +204,8 @@ class Composer(object):
 
         return melody
 
+
+
 def numberToBase(n, b):
     if n == 0:
         return [0]
@@ -213,6 +227,7 @@ def generateNoteDelta(counter,base,multiplier):
 
 def generateDurationSequence(cycle_length,beat_length,tension,tension_direction):
     base_duration = 2
+    # longer notes for lower tension and vice versa
     ascending_rhythm_powers =  [randint(4,5),randint(4,4),randint(3,5),randint(3,4),randint(3,4),randint(2,3),randint(2,3),randint(1,2),randint(1,2)]
     max_power = ascending_rhythm_powers[tension] 
     uniform_beats = [2*randint(1,max_power) for x in range(0,cycle_length)]
@@ -224,6 +239,9 @@ def generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
         target = 8*randint(1,2)
 
     counter = 0
+
+    # this is what keeps it on beat. keep generating random note lengths until you get something that
+    # lines up with the beat
     while True:
         uniform_beats = [2*randint(1,max_power) for x in range(0,cycle_length)]
         if counter % 5000 == 0:
@@ -233,16 +251,17 @@ def generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
             break
     return uniform_beats
 
-def composeAndWriteToFile(scale,intervals,duration,fileName):
+majorScaleNotes = ['C','D','E','F','G','A']
+pentatonic = ['C','D','E','G','A']
+bluesScaleNotes = ['C','D#','F','F#','A#']
+arabScaleNotes = ['C','C#','E','F','G','G#']
+spanish = ['C', 'C#',  'E'  ,'F'  ,'G' , 'G#' ,'A#']
+
+def composeAndWriteToFile(scale,duration,fileName):
     mozart = Composer()
     testMelody = mozart.compose(scale,intervals,duration)
     MIDIGen = MIDIGenerator(fileName)
     MIDIGen.addMelody(testMelody)
     MIDIGen.writeMidiToFile()
     
-majorScaleNotes = ['C','D','E','F','G','A']
-pentatonic = ['C','D','E','G','A']
-bluesScaleNotes = ['C','D#','F','F#','A#']
-arabScaleNotes = ['C','C#','E','F','G','G#']
-spanish = ['C', 'C#',  'E'  ,'F'  ,'G' , 'G#' ,'A#']
-composeAndWriteToFile(pentatonic,[],500,"output.mid")
+composeAndWriteToFile(pentatonic,500,"output.mid")
