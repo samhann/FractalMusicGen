@@ -52,21 +52,15 @@ class MIDIGenerator(object):
         binfile.close()
 
 
+
 class Composer(object):
 
     
     def compose(self,scaleNotes,duration):
         scaleLen = len(scaleNotes)
-        counter = 0
         melody = []
         octave = 1
 
-        counter = 0
-
-        # parameters to the random note offset generator
-        multiplier =  randint(2,55000)
-        noteCounter = randint(20,55000)
-        base =  randint(1,51000)
         
 
         cycle_length = 2**randint(0,3)
@@ -84,7 +78,15 @@ class Composer(object):
         total_meta_cycles = 0
         meta_cycle_max = 10
         cycle_counter = 0
-        duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
+        counter = 0
+
+        # parameters to the random note offset generator
+        multiplier =  randint(2,55000)
+        noteCounter = randint(20,55000)
+        base =  randint(1,51000)
+        counter = 0
+
+        duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction,counter,noteCounter,multiplier,base)
 
         while counter < duration:
 
@@ -123,7 +125,7 @@ class Composer(object):
 
                 # this actually makes the output more varied . Need to see why its required
                 if randint(1,10) % 2 == 0 :
-                    octaveMod =  (octaveMod + 1) % 3
+                    octaveMod =  (octaveMod + 1) % randint(2,4)
 
                 # dont get too varied when tension has fallen
                 if tension_direction == -1 and tension <= 5:
@@ -159,6 +161,7 @@ class Composer(object):
                         meta_tension_direction = meta_tension_direction * -1
                         meta_tension_cycle = randint(2,5)
                         total_meta_cycles = total_meta_cycles + 1
+                        octaveMod =  (octaveMod + 1) % 3
 
                     if total_meta_cycles == meta_cycle_max:
                         return melody
@@ -178,7 +181,7 @@ class Composer(object):
 
                 # generate note lengths based on cycle length , beat length and tension . beat length not used
                 # need to fix to accomodate both odd and even rhythms
-                duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
+                duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction,counter,noteCounter,multiplier,base)
                 
                 # Every now and then make the phrases longer or shorter based on the tension
                 if num_cycles % randint(2,4) == 0:
@@ -192,7 +195,7 @@ class Composer(object):
 
                    octaveOffset = randint(0,2)
                    tension = 0
-                   duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
+                   duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction,counter,noteCounter,multiplier,base)
 
                 counter = counter + 1
                 continue
@@ -225,11 +228,14 @@ def sumOfDigits(num):
 def generateNoteDelta(counter,base,multiplier):
     return sumOfDigits(numberToBase((counter * multiplier),base))
 
-def generateDurationSequence(cycle_length,beat_length,tension,tension_direction):
+def generateDurationSequence(cycle_length,beat_length,tension,tension_direction,counter,noteCounter,multiplier,base):
     base_duration = 2
     # longer notes for lower tension and vice versa
-    ascending_rhythm_powers =  [randint(4,5),randint(4,4),randint(3,5),randint(3,4),randint(3,4),randint(2,3),randint(2,3),randint(1,2),randint(1,2)]
-    max_power = ascending_rhythm_powers[tension] 
+    fractal_seq =  [generateNoteDelta(noteCounter+counter + x,multiplier,base)  for x in range(0,9)]
+    fractal_seq =  [round(float(max(fractal_seq))/float(x))  for x in fractal_seq]
+    ascending_rhythm_powers =  [randint(3,4),randint(3,3),randint(3,4),randint(3,4),randint(3,4),randint(2,3),randint(2,3),randint(1,2),randint(1,2)]
+  
+    max_power = int(ascending_rhythm_powers[tension] if randint(1,2) % 2 == 0 else fractal_seq[tension]) 
     uniform_beats = [2*randint(1,max_power) for x in range(0,cycle_length)]
     target = 8
 
@@ -264,4 +270,4 @@ def composeAndWriteToFile(scale,duration,fileName):
     MIDIGen.addMelody(testMelody)
     MIDIGen.writeMidiToFile()
     
-composeAndWriteToFile(pentatonic,500,"output.mid")
+composeAndWriteToFile(spanish,500,"output.mid")
