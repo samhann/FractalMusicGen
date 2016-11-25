@@ -70,7 +70,7 @@ class Composer(object):
         octaveOffset = 0
         octaveMod = 0
         tension = 0
-        tension_cycle = randint(1,5)
+        tension_cycle = randint(1,3)
         tension_direction = 1
         tension_count = 0
         meta_tension_cycle = randint(2,5)
@@ -79,7 +79,7 @@ class Composer(object):
         beat_length = 4
         beat_accumulated = 0
         total_meta_cycles = 0
-        meta_cycle_max = 5
+        meta_cycle_max = 10
         cycle_counter = 0
 
         duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
@@ -87,10 +87,10 @@ class Composer(object):
         while counter < duration:
             noteMod = 3
             if tension >= 2:
-                noteMod = 4
+                noteMod = 3
 
             if tension >= 3:
-                noteMod = 3
+                noteMod = 2
 
             if tension >= 5:
                 noteMod = 2
@@ -122,11 +122,11 @@ class Composer(object):
                 octaveOffset = 0 
 
                 # this actually makes the output more varied 
-                if randint(1,3) % 3 == 0:
+                if randint(1,10) % 2 == 0 :
                     octaveMod =  (octaveMod + 1) % 3
 
                 if tension_direction == -1 and tension <= 5:
-                    octaveMod = max(0,octaveMod-1)
+                    octaveMod = max(0,octaveMod-2)
 
                 tension_count = tension_count + 1
                 tension_ended = False
@@ -139,17 +139,17 @@ class Composer(object):
                         noteCounter = randint(1,5000)
                         base =  randint(1,1000)
 
-                        melody.append(("S",finalOctaveOffset,8, 30 + 20*int(tension/9) + randint(4,8)))
+                        melody.append(("S",finalOctaveOffset,8, 25 + 20*int(tension/9) + randint(4,8)))
 
                     tension_count = 0
                     tension_direction = tension_direction * -1
-                    tension_cycle = randint(2,4)
-                    meta_tension = meta_tension + 1
+                    tension_cycle = meta_tension + randint(1,3)
+                    meta_tension = meta_tension + randint(1,2)
 
                     if meta_tension_cycle % meta_tension == 0:
                         meta_tension = 0
                         meta_tension_direction = meta_tension_direction * -1
-                        meta_tension_cycle = randint(2,4)
+                        meta_tension_cycle = randint(2,5)
                         total_meta_cycles = total_meta_cycles + 1
 
                     if total_meta_cycles == meta_cycle_max:
@@ -162,7 +162,7 @@ class Composer(object):
 
                 tension = (meta_term + (tension + tension_direction*randint(1,2) )) % randint(6,8)
                
-                if fraction >= 0.85 and tension_direction == -1:
+                if fraction >= 0.75 and tension_direction == -1:
                     tension = randint(1,3) 
                 elif (tension_count + 1) % tension_cycle == 0:
                     tension = randint(1,2)
@@ -170,7 +170,7 @@ class Composer(object):
                 duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
                 
                 if num_cycles % randint(2,4) == 0:
-                   cycle_length = 2 + 2**randint(2,3) 
+                   cycle_length = 2 + 2**randint(0,1) 
                    if tension >= 4:
                         cycle_length = 2**randint(2,4)
                    if tension >= 6:
@@ -187,7 +187,7 @@ class Composer(object):
 
             finalOctaveOffset = 0 if octaveMod == 0 else (octave + octaveOffset) % octaveMod
             finalOctaveOffset = finalOctaveOffset + 2
-            melody.append((scaleNotes[noteOffset % scaleLen],finalOctaveOffset,noteDuration, 30 + 20*int(tension/9) + randint(4,8)))
+            melody.append((scaleNotes[noteOffset % scaleLen],finalOctaveOffset,noteDuration, 30 + 20*int(tension/9) + randint(4,8) + meta_tension))
             counter = counter + 1
 
         return melody
@@ -213,12 +213,25 @@ def generateNoteDelta(counter,base,multiplier):
 
 def generateDurationSequence(cycle_length,beat_length,tension,tension_direction):
     base_duration = 2
-
-    ascending_rhythm_powers =  [randint(4,6),randint(4,5),randint(3,4),randint(3,4),randint(3,4),randint(2,3),randint(2,3),randint(1,2),randint(1,2)]
+    ascending_rhythm_powers =  [randint(4,5),randint(4,4),randint(3,5),randint(3,4),randint(3,4),randint(2,3),randint(2,3),randint(1,2),randint(1,2)]
     descending_rhythm_powers = [randint(1,3),randint(1,3),randint(1,4),randint(2,5),randint(3,5),randint(4,5),2+randint(2,3),2 + randint(2,3),3 + randint(4,5)]
-
     max_power = ascending_rhythm_powers[tension] 
     uniform_beats = [2*randint(1,max_power) for x in range(0,cycle_length)]
+    target = 8
+
+    if tension >= 0 and tension <= 2:
+        target = 8*randint(1,3)
+    else:
+        target = 8*randint(1,2)
+
+    counter = 0
+    while True:
+        uniform_beats = [2*randint(1,max_power) for x in range(0,cycle_length)]
+        if counter % 5000 == 0:
+            target = target/2
+        sum_beats = sum(uniform_beats)
+        if  sum_beats % target == 0:
+            break
     return uniform_beats
 
 def composeAndWriteToFile(scale,intervals,duration,fileName):
@@ -233,4 +246,4 @@ pentatonic = ['C','D','E','G','A']
 bluesScaleNotes = ['C','D#','F','F#','A#']
 arabScaleNotes = ['C','C#','E','F','G','G#']
 spanish = ['C', 'C#',  'E'  ,'F'  ,'G' , 'G#' ,'A#']
-composeAndWriteToFile(pentatonic,[],500,"output.mid")
+composeAndWriteToFile(bluesScaleNotes,[],500,"output.mid")
