@@ -114,7 +114,7 @@ class Composer(object):
 
 
                 # this makes a repetition
-                if randint(0,10) % 3 == 0:
+                if randint(0,10) % 4 == 0:
                     noteCounter = noteCounter - cycle_length - 1
                     counter = counter + 1
                     continue
@@ -143,7 +143,7 @@ class Composer(object):
 
                     tension_count = 0
                     tension_direction = tension_direction * -1
-                    tension_cycle = randint(2,5)
+                    tension_cycle = randint(2,4)
                     meta_tension = meta_tension + 1
 
                     if meta_tension_cycle % meta_tension == 0:
@@ -162,7 +162,7 @@ class Composer(object):
 
                 tension = (meta_term + (tension + tension_direction*randint(1,2) )) % randint(6,8)
                
-                if fraction >= 0.90 and tension_direction == -1:
+                if fraction >= 0.85 and tension_direction == -1:
                     tension = randint(1,3) 
                 elif (tension_count + 1) % tension_cycle == 0:
                     tension = randint(1,2)
@@ -172,9 +172,9 @@ class Composer(object):
                 if num_cycles % randint(2,4) == 0:
                    cycle_length = 2 + 2**randint(2,3) 
                    if tension >= 4:
-                        cycle_length = 2**randint(2,3)
+                        cycle_length = 2**randint(2,4)
                    if tension >= 6:
-                        cycle_length = 2**randint(1,2) 
+                        cycle_length = 2**randint(1,3) 
                    if tension >= 7:
                         cycle_length = 2**randint(1,2) 
 
@@ -215,7 +215,7 @@ def generateDurationSequence(cycle_length,beat_length,tension,tension_direction)
     base_duration = 2
 
     ascending_rhythm_powers =  [randint(4,6),randint(4,5),randint(3,4),randint(3,4),randint(3,4),randint(2,3),randint(2,3),randint(1,2),randint(1,2)]
-    descending_rhythm_powers = [randint(1,3),randint(1,3),randint(1,4),randint(2,5),randint(3,5),randint(4,5),randint(2,3),2 + randint(2,3),2 + randint(4,5)]
+    descending_rhythm_powers = [randint(1,3),randint(1,3),randint(1,4),randint(2,5),randint(3,5),randint(4,5),2+randint(2,3),2 + randint(2,3),3 + randint(4,5)]
 
     max_power = ascending_rhythm_powers[tension] 
     uniform_beats = [2*randint(1,max_power) for x in range(0,cycle_length)]
@@ -233,4 +233,4 @@ pentatonic = ['C','D','E','G','A']
 bluesScaleNotes = ['C','D#','F','F#','A#']
 arabScaleNotes = ['C','C#','E','F','G','G#']
 spanish = ['C', 'C#',  'E'  ,'F'  ,'G' , 'G#' ,'A#']
-composeAndWriteToFile(arabScaleNotes,[],500,"output.mid")
+composeAndWriteToFile(pentatonic,[],500,"output.mid")
