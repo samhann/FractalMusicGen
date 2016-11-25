@@ -100,7 +100,7 @@ class Composer(object):
 
             #switch things up every now and then ie cycles
 
-            print(noteDuration)
+            
             if counter % cycle_length == 0 and counter != 0:
 
                 # this makes a repetition
