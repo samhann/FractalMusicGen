@@ -13,7 +13,7 @@ class MIDIGenerator(object):
         self.MIDIObject = MIDIFile(1)
         self.track = 0
         self.MIDIObject.addTrackName(self.track,0,"Sample Track")
-        self.MIDIObject.addTempo(self.track,0,756)
+        self.MIDIObject.addTempo(self.track,0,1400)
         self.volume = 100
         self.channel = 0
         self.notes = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
@@ -55,7 +55,7 @@ class MIDIGenerator(object):
 class Composer(object):
 
     
-    def compose(self,scaleNotes,rhythmIntervals,duration):
+    def compose(self,scaleNotes,duration):
         scaleLen = len(scaleNotes)
         counter = 0
         melody = []
@@ -259,7 +259,7 @@ spanish = ['C', 'C#',  'E'  ,'F'  ,'G' , 'G#' ,'A#']
 
 def composeAndWriteToFile(scale,duration,fileName):
     mozart = Composer()
-    testMelody = mozart.compose(scale,intervals,duration)
+    testMelody = mozart.compose(scale,duration)
     MIDIGen = MIDIGenerator(fileName)
     MIDIGen.addMelody(testMelody)
     MIDIGen.writeMidiToFile()
