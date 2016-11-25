@@ -22,7 +22,8 @@ Take the output. Layer it over octaves and use it drive some arps and pads , add
 
 https://clyp.it/k5vtgkrd
 
-You might need to adjust 
+You might need to adjust the temp and arp speed.
+
 ## Installation
 
 Just run pip install midiutil and then run the script. 
