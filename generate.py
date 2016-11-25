@@ -63,42 +63,57 @@ class Composer(object):
         octave = 1
 
         counter = 0
-        octaveOffset = 0
 
         multiplier =  randint(2,55000)
         noteCounter = randint(20,55000)
         base =  randint(1,51000)
         cycle_length = 2**randint(0,3)
-        prevOffset = 0
         octaveOffset = 0
         octaveMod = 0
         tension = 0
         tension_cycle = randint(1,2)
         tension_direction = 1
         tension_count = 0
+        beat_length = 4
+        beat_accumulated = 0
 
         while counter < duration:
 
-            noteOffset = tension + generateNoteDelta(noteCounter+counter,multiplier,base)/2
+            if beat_accumulated == beat_length:
+                beat_accumulated = 0
+
+
+            noteOffset = tension + generateNoteDelta(noteCounter+counter,multiplier,base)/ (tension_count+1)
             # extend durations by even multiples every now and then
-            noteDuration = rhythmIntervals[counter % len(rhythmIntervals)] * (2**(noteOffset%2))
+            noteDuration = min(rhythmIntervals[counter % len(rhythmIntervals)] * (2**(noteOffset%2)),4 - beat_accumulated)
             # doesnt make sense to do this on every note but removing this makes the output worse. need to investigate
             cycle_length = 2**randint(2,6)
             num_cycles = 0
 
+
+
+            if counter % beat_length == 0 and counter != 0:
+                noteDuration = (4 - beat_accumulated)
+                beat_accumulated = 0
+
+            
+
             #switch things up every now and then ie cycles
 
+            print(noteDuration)
             if counter % cycle_length == 0 and counter != 0:
 
+                # this makes a repetition
                 if randint(0,10) % 3 == 0:
                     noteCounter = noteCounter - cycle_length - 1
                     counter = counter + 1
 
-                    if len(melody) >= 1:
+                    if len(melody) >= 1 and (4 - beat_accumulated) > 0:
                         last = melody.pop()
-                        melody.append((last[0],last[1],last[2]+noteDuration + randint(0,1)))    
+                        melody.append((last[0],last[1],last[2]+noteDuration )) 
+                        beat_accumulated = beat_accumulated + noteDuration
 
-                    melody.append(("S",octave + octaveOffset,noteDuration + noteDuration))
+                    #melody.append(("S",octave + octaveOffset,noteDuration ))
                 
                     continue
 
@@ -121,7 +136,7 @@ class Composer(object):
 
                     tension_count = 0
                     tension_direction = tension_direction * -1
-                    tension_cycle = randint(1,3)
+                    tension_cycle = randint(2,5)
 
 
                 tension = (tension + tension_direction*randint(1,3) ) % 4
@@ -129,34 +144,39 @@ class Composer(object):
                 
                 if num_cycles % randint(2,4) == 0:
                    cycle_length = 2**randint(2,6) 
-                   intervals = [1,1,1,1]
                    octaveOffset = randint(0,2)
                    tension = 0
 
-                if len(melody) >= 1:
-                    last = melody.pop()
-                    melody.append((last[0],last[1],last[2]+noteDuration + 1))    
+                #if len(melody) >= 1:
 
-                if tension_ended:
-                    melody.append(("S",octave + octaveOffset,noteDuration + 2 ) )
+                    #last = melody.pop()
+                    #melody.append((last[0],last[1],last[2]+noteDuration ))    
+
+                if tension_ended and (4 - beat_accumulated) > 0:
+                    if len(melody) >= 1:
+                        last = melody.pop()
+                        melody.append((last[0],last[1],last[2]+(4 - beat_accumulated)  ))
+                        beat_accumulated = beat_accumulated + (4 - beat_accumulated) 
+                
                 counter = counter + 1
                 continue
 
             finalOctaveOffset = 0 if octaveMod == 0 else (octave + octaveOffset) % octaveMod
             finalOctaveOffset = finalOctaveOffset + 2
             # some random silences
-            if counter % 2**randint(2,4) == 0:
+            if counter % 2**randint(2,4) == 0 :
                 if len(melody) >= 1:
                     last = melody.pop()
-                    melody.append((last[0],last[1],last[2]+noteDuration + noteDuration))    
+                    melody.append((last[0],last[1],last[2]+noteDuration ))
+                    beat_accumulated = beat_accumulated + noteDuration
+                    
                 
             else:
                 melody.append((scaleNotes[noteOffset % scaleLen],finalOctaveOffset,noteDuration))
+                beat_accumulated = beat_accumulated + noteDuration
             counter = counter + 1
 
         return melody
-            
-
 
 def numberToBase(n, b):
     if n == 0:
@@ -183,8 +203,6 @@ def composeAndWriteToFile(scale,intervals,duration,fileName):
     MIDIGen = MIDIGenerator(fileName)
     MIDIGen.addMelody(testMelody)
     MIDIGen.writeMidiToFile()
-
-
     
 intervals = [1,1,1,1];
 majorScaleNotes = ['C','D','E','F','G','A']
@@ -193,4 +211,4 @@ bluesScaleNotes = ['C','D#','F','F#','A#']
 arabScaleNotes = ['C','C#','E','F','G','G#']
 spanish = ['C', 'C#',  'E'  ,'F'  ,'G' , 'G#' ,'A#']
 
-composeAndWriteToFile(majorScaleNotes,intervals,500,"output.mid")
+composeAndWriteToFile(spanish,intervals,500,"output.mid")
