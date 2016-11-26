@@ -79,7 +79,7 @@ class Composer(object):
         meta_cycle_max = 10
         cycle_counter = 0
         counter = 0
-
+        previous_cycle_length = cycle_length
         # parameters to the random note offset generator
         multiplier =  randint(2,55000)
         noteCounter = randint(20,55000)
@@ -89,11 +89,12 @@ class Composer(object):
         duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction,counter,noteCounter,multiplier,base)
 
         while counter < duration:
-
+            finalOffset = 0
+            previousOctave = 0
             # suppress the note offset lower proportional to tension
             noteMod = 3
             if tension >= 2:
-                noteMod = 3
+                noteMod = 2
 
             if tension >= 3:
                 noteMod = 2
@@ -145,6 +146,18 @@ class Composer(object):
                         noteCounter = randint(1,5000)
                         base =  randint(1,1000)
 
+                        if len(melody) > 1:
+                            noteIn = melody.pop()
+                            n = noteIn[0]
+                            o = noteIn[1]
+                            d = noteIn[2]
+                            v = noteIn[3]
+                            
+                            if d <= 2:
+                                d = 4
+
+                            melody.append(("C" if randint(1,2) % 3 == 0 else n,o,d, v))
+
                         melody.append(("S",finalOctaveOffset,8, 25 + 20*int(tension/9) + randint(4,8)))
 
                     # Restart tension cycle
@@ -164,7 +177,15 @@ class Composer(object):
                         octaveMod =  (octaveMod + 1) % 3
 
                     if total_meta_cycles == meta_cycle_max:
+                        if len(melody) > 1:
+                            noteIn = melody.pop()
+                            n = noteIn[0]
+                            o = noteIn[1]
+                            d = noteIn[2]
+                            v = noteIn[3]
+                            melody.append((n,o,8, v))
                         return melody
+                    
 
 
                 meta_term = meta_tension if meta_tension_direction == 1 else -1*meta_tension
@@ -185,25 +206,41 @@ class Composer(object):
                 
                 # Every now and then make the phrases longer or shorter based on the tension
                 if num_cycles % randint(2,4) == 0:
-                   cycle_length = 2 + 2**randint(0,1) 
+                   prev_cyc = cycle_length
+                   cycle_length = 2 + 2**randint(1,2) 
                    if tension >= 4:
-                        cycle_length = 2**randint(2,4)
+                        cycle_length = 2**randint(2,2)
                    if tension >= 6:
-                        cycle_length = 2**randint(1,3) 
+                        cycle_length = 2**randint(2,3) 
                    if tension >= 7:
                         cycle_length = 2**randint(1,2) 
 
-                   octaveOffset = randint(0,2)
+                   octaveOffset = randint(0,1)
                    tension = 0
-                   duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction,counter,noteCounter,multiplier,base)
+
+                   if prev_cyc > 4:
+                       duration_sequence = generateDurationSequence(cycle_length,beat_length,tension,tension_direction,counter,noteCounter,multiplier,base)
 
                 counter = counter + 1
                 continue
 
             finalOctaveOffset = 0 if octaveMod == 0 else (octave + octaveOffset) % octaveMod
             finalOctaveOffset = finalOctaveOffset + 2
+            previousOctave = finalOctaveOffset
+            print(noteOffset % scaleLen)
+            print(finalOctaveOffset)
+
+            previousOffset = finalOffset
+
+            chromatic = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
+            finalOffset = chromatic.index(scaleNotes[noteOffset % scaleLen]) + 12*finalOctaveOffset
+
+            if finalOffset / 12 >= 6:
+                finalOctaveOffset = 5
             melody.append((scaleNotes[noteOffset % scaleLen],finalOctaveOffset,noteDuration, 30 + 20*int(tension/9) + randint(4,8) + meta_tension))
             counter = counter + 1
+            previousOctave = finalOffset / 12
+           
 
         return melody
 
@@ -233,7 +270,7 @@ def generateDurationSequence(cycle_length,beat_length,tension,tension_direction,
     # longer notes for lower tension and vice versa
     fractal_seq =  [generateNoteDelta(noteCounter+counter + x,multiplier,base)  for x in range(0,9)]
     fractal_seq =  [round(float(max(fractal_seq))/float(x))  for x in fractal_seq]
-    ascending_rhythm_powers =  [randint(3,4),randint(3,3),randint(3,4),randint(3,4),randint(3,4),randint(2,3),randint(2,3),randint(1,2),randint(1,2)]
+    ascending_rhythm_powers =  [randint(2,3),randint(2,3),randint(2,3),randint(3,4),randint(3,4),randint(2,3),randint(2,3),randint(1,2),randint(1,2)]
   
     max_power = int(ascending_rhythm_powers[tension] if randint(1,2) % 2 == 0 else fractal_seq[tension]) 
     uniform_beats = [2*randint(1,max_power) for x in range(0,cycle_length)]
@@ -255,6 +292,7 @@ def generateDurationSequence(cycle_length,beat_length,tension,tension_direction,
         sum_beats = sum(uniform_beats)
         if  sum_beats % target == 0:
             break
+
     return uniform_beats
 
 majorScaleNotes = ['C','D','E','F','G','A']
@@ -270,4 +308,4 @@ def composeAndWriteToFile(scale,duration,fileName):
     MIDIGen.addMelody(testMelody)
     MIDIGen.writeMidiToFile()
     
-composeAndWriteToFile(spanish,500,"output.mid")
+composeAndWriteToFile(pentatonic,500,"output.mid")
